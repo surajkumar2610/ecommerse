@@ -42,4 +42,10 @@ class AuthController extends Controller
         }
         return redirect(route("register"))->with("error", "Somethig went wrong");
     }
+
+    function logout(){
+        Auth::logout();
+        session()->flush();
+        return redirect()->route('login');
+    }
 }
