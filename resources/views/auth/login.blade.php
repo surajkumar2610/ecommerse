@@ -38,7 +38,7 @@
         <div class="form-floating" style="margin-bottom:10px">
             <input type="password" name="password"  class="form-control" id="floatingPassword" placeholder="password">
             <label for="floatingPassword">Password</label>
-            @error('password')
+            @error("password")
             <span class="text-danger">{{$message}}</span>
             @enderror
         </div>
@@ -53,8 +53,8 @@
         <div class="alert alert-danger">{{session("error")}}</div>
         @endif
         <button class="btn btn-primary w-100 py-2" type="submit">Sign in</button>
-        <a href="{{route('register')}}" class="text-center">Create new account</a>
-        <p class="mt-5 mb-3 text-body-secondary">&copy;2017-2024</p>
+        <a href="{{route('register')}}" class="text-center ">Create new account</a>
+        <p class="mt-5 mb-3 text-body-secondary">&copy;2017-2025</p>
     </form>
 </main>
 @endsection
