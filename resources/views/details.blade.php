@@ -12,6 +12,7 @@
             @if(session("error"))
             <div class="alert alert-danger">{{session("error")}}</div>
             @endif
+
             <h1 class="titile">{{$product->title}}</h1>
             <p class="price">{{$product->price}}</p>
             <p class="description">{{$product->description}}</p>

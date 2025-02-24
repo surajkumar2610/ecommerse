@@ -18,21 +18,36 @@ class ProductsController extends Controller
         return view('details', compact('product'));
     }
     function addToCart($id){
-        $cart = new Cart();
-        $cart->user_id = auth()->user()->id;
-        $cart->product_id= $id;
-        if($cart->save()){
-            return redirect()->back()->with('success', 'Product has been added to cart');
+        $userId = auth()->user()->id;
+
+        // Check if the product already exists in the cart
+        $cartItem = Cart::where('user_id', $userId)->where('product_id', $id)->first();
+    
+        if ($cartItem) {
+            // If exists, increase quantity
+            $cartItem->quantity += 1;
+            $cartItem->save();
+        } else {
+            // Otherwise, create a new entry
+            $cart = new Cart();
+            $cart->user_id = $userId;
+            $cart->product_id = $id;
+            $cart->quantity = 1;
+            $cart->save();
         }
-        return redirect()->back()->with('erroe', 'Something went wrong');
+    
+        return redirect()->back()->with('success', 'Product has been added to cart');
     }
+
     function showcart(){
+        $userId = auth()->user()->id;
+
         $cartItem = DB::table("cart")
-        ->join('products', 'cart.product_id', '=', 'product_id')
-        ->select("cart.product_id", DB::raw("count(*) as quantity"),"products.title", "products.price", "products.image")
-        ->where("cart.user_id", auth()->user()->id)
-        ->groupBy("cart.product_id", "products.title", "products.price", "products.image")
-        ->paginate(2);
+            ->join('products', 'cart.product_id', '=', 'products.id') // Fixed table alias
+            ->select("cart.product_id", "cart.quantity", "products.title", "products.price", "products.image")
+            ->where("cart.user_id", $userId)  // Ensure filtering by user
+            ->get();
+    
         return view('cart', compact('cartItem'));
     }
 }

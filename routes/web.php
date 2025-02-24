@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ProductsController;
+use App\Http\Controllers\OrderController;
 
 Route::get('/', [ProductsController::class, "index"])->name("home");
 
@@ -17,5 +18,8 @@ Route::get("/products/{slug}", [ProductsController::class, "details"])->name("pr
 
 Route::middleware("auth")->group(function(){
     Route::get("/cart/{id}", [ProductsController::class, "addToCart"])->name("cart.add");
-    Route::get("\cart", [ProductsController::class, "showcart"])->name("cart.show");
+    Route::get("/cart", [ProductsController::class, "showcart"])->name("cart.show");
+
+    Route::get("/checkout", [OrderController::class, "showcheckout"])->name("checkout.show");
+    Route::post("/checkout", [OrderController::class, "checkoutPost"])->name("checkout.post");
 });
