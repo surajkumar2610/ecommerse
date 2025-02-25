@@ -22,4 +22,5 @@ Route::middleware("auth")->group(function(){
 
     Route::get("/checkout", [OrderController::class, "showcheckout"])->name("checkout.show");
     Route::post("/checkout", [OrderController::class, "checkoutPost"])->name("checkout.post");
+    Route::get('/order-history', [OrderController::class, 'orderHistory'])->name('order.history');
 });

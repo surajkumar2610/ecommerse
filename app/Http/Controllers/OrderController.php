@@ -58,4 +58,10 @@ class OrderController extends Controller
         return redirect(route('cart.show'))->with("error", "An error occurred while placing the order.");
     }
     
+    public function orderHistory()
+    {
+        $orders = Orders::where('user_id', auth()->user()->id)->orderBy('created_at', 'desc')->get();
+        return view('history', compact('orders'));
+    }
+
 }
