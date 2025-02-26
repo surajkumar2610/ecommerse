@@ -19,23 +19,18 @@ class ProductsController extends Controller
     }
     function addToCart($id){
         $userId = auth()->user()->id;
-
-        // Check if the product already exists in the cart
         $cartItem = Cart::where('user_id', $userId)->where('product_id', $id)->first();
     
         if ($cartItem) {
-            // If exists, increase quantity
             $cartItem->quantity += 1;
             $cartItem->save();
         } else {
-            // Otherwise, create a new entry
             $cart = new Cart();
             $cart->user_id = $userId;
             $cart->product_id = $id;
             $cart->quantity = 1;
             $cart->save();
         }
-    
         return redirect()->back()->with('success', 'Product has been added to cart');
     }
 
@@ -43,11 +38,35 @@ class ProductsController extends Controller
         $userId = auth()->user()->id;
 
         $cartItem = DB::table("cart")
-            ->join('products', 'cart.product_id', '=', 'products.id') // Fixed table alias
+            ->join('products', 'cart.product_id', '=', 'products.id')
             ->select("cart.product_id", "cart.quantity", "products.title", "products.price", "products.image")
-            ->where("cart.user_id", $userId)  // Ensure filtering by user
+            ->where("cart.user_id", $userId)
             ->get();
-    
         return view('cart', compact('cartItem'));
+    }
+
+    public function updateCart(Request $request){
+        $request->validate([
+            'product_id' => 'required|integer',
+            'action' => 'required|string|in:increase,decrease'
+        ]);
+        $userId = auth()->user()->id;
+        $productId = $request->product_id;
+        $action = $request->action;
+        $cartItem = Cart::where('user_id', $userId)->where('product_id', $productId)->first();
+        if ($cartItem) {
+            if ($action === "increase") {
+                $cartItem->quantity += 1;
+            } elseif ($action === "decrease") {
+                if ($cartItem->quantity > 1) {
+                    $cartItem->quantity -= 1;
+                } else {
+                    $cartItem->delete();
+                    return response()->json(['success' => true, 'removed' => true]);
+                }
+            }
+            $cartItem->save();
+        }
+        return response()->json(['success' => true, 'quantity' => $cartItem->quantity]);
     }
 }

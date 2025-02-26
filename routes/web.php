@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ProductsController;
 use App\Http\Controllers\OrderController;
+use App\Http\Controllers\ProfileController;
 
 Route::get('/', [ProductsController::class, "index"])->name("home");
 
@@ -23,4 +24,10 @@ Route::middleware("auth")->group(function(){
     Route::get("/checkout", [OrderController::class, "showcheckout"])->name("checkout.show");
     Route::post("/checkout", [OrderController::class, "checkoutPost"])->name("checkout.post");
     Route::get('/order-history', [OrderController::class, 'orderHistory'])->name('order.history');
+    Route::post('/cart/update', [ProductsController::class, 'updateCart'])->name('cart.update');
+
+
+    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile');
+    Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
+
 });

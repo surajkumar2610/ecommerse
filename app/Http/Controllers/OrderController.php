@@ -8,54 +8,58 @@ use Illuminate\Support\Facades\DB;
 
 class OrderController extends Controller
 {
-    function showcheckout(){
-        return view('checkout');
+    function showcheckout(){ 
+        $user = auth()->user();
+        $latestOrder = Orders::where('user_id', $user->id)
+                            ->latest()
+                            ->first();
+        return view('checkout', compact('latestOrder'));
     }
 
-    function checkoutPost(Request $request){
+    public function checkoutPost(Request $request)
+    {
         $request->validate([
             'address' => 'required',
-            'pincode' => 'required',
-            'number' => 'required',
+            'pincode' => 'required|digits:6',
+            'number' => 'required|digits:10',
         ]);
     
-        $userId = auth()->user()->id;
+        $user = auth()->user();
+        $user->update([
+            'address' => $request->address,
+            'pincode' => $request->pincode,
+            'number' => $request->number
+        ]);
     
         $cartItems = DB::table("cart")
-            ->join('products', 'cart.product_id', '=', 'products.id') // Fixed alias
+            ->join('products', 'cart.product_id', '=', 'products.id')
             ->select("cart.product_id", "cart.quantity", "products.price")
-            ->where("cart.user_id", $userId)
+            ->where("cart.user_id", $user->id)
             ->get();
     
         if ($cartItems->isEmpty()) {
             return redirect(route('cart.show'))->with("error", "Cart is empty");
         }
     
-        $productIds = [];
-        $quantities = [];
-        $totalPrice = 0;
+        $productIds = $cartItems->pluck('product_id')->toArray();
+        $quantities = $cartItems->pluck('quantity')->toArray();
+        $totalPrice = $cartItems->sum(fn($item) => $item->price * $item->quantity);
     
-        foreach ($cartItems as $item) {
-            $productIds[] = $item->product_id;
-            $quantities[] = $item->quantity;
-            $totalPrice += $item->price * $item->quantity; // Fixed total price calculation
+        $order = Orders::create([
+            'user_id' => $user->id,
+            'address' => $request->address,
+            'pincode' => $request->pincode,
+            'number' => $request->number,
+            'product_id' => json_encode($productIds),
+            'total_price' => $totalPrice,
+            'quantity' => json_encode($quantities),
+        ]);
+    
+        if ($order) {
+            DB::table('cart')->where("user_id", $user->id)->delete();
+            return redirect(route('cart.show'))->with("success", "Order placed successfully!");
         }
-    
-        $order = new Orders();
-        $order->user_id = $userId;
-        $order->address = $request->address;
-        $order->pincode = $request->pincode;
-        $order->number = $request->number;
-        $order->product_id = json_encode($productIds);
-        $order->total_price = $totalPrice;
-        $order->quantity = json_encode($quantities);
-    
-        if ($order->save()) {
-            DB::table('cart')->where("user_id", $userId)->delete();
-            return redirect(route('cart.show'))->with("success", "Order has been placed successfully!");
-        }
-    
-        return redirect(route('cart.show'))->with("error", "An error occurred while placing the order.");
+        return redirect(route('cart.show'))->with("error", "Failed to place order.");
     }
     
     public function orderHistory()
@@ -64,4 +68,5 @@ class OrderController extends Controller
         return view('history', compact('orders'));
     }
 
+    
 }
